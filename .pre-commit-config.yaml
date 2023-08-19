@@ -1,0 +1,99 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.3.0
+    hooks:
+      - id: check-ast
+      - id: check-case-conflict
+      - id: check-yaml
+      - id: debug-statements
+      - id: end-of-file-fixer
+        exclude: (copier\-answers\.yml|ipynb|html)$
+      - id: requirements-txt-fixer
+      - id: trailing-whitespace
+        args:
+          - --markdown-linebreak-ext=md
+
+  - repo: local
+    hooks:
+      - name: poetry check
+        id: poetry-check
+        description: Validate pyproject.toml structure
+        entry: poetry check
+        files: ^pyproject.toml$
+        pass_filenames: false
+        language: system
+
+      - name: black
+        id: black
+        description: A formatter for Python files
+        entry: poetry run black
+        args: [--config=pyproject.toml]
+        types: [python]
+        language: system
+
+      - name: isort
+        id: isort
+        description: isort your imports, so you don't have to.
+        entry: poetry run isort
+        args: [--settings-path=pyproject.toml]
+        types: [python]
+        language: system
+
+      - name: unimport
+        id: unimport
+        description: A linter, formatter for finding and removing unused import statements
+        entry: poetry run unimport
+        args: [--ignore-init, --include-star-import, --remove]
+        types: [python]
+        language: system
+
+      - name: mypy
+        id: mypy
+        description: Optional Static Typing for Python
+        entry: poetry run mypy
+        args: [--config-file=pyproject.toml, --ignore-missing-imports]
+        types: [python]
+        language: system
+
+  - repo: https://github.com/pycqa/flake8
+    rev: 3.9.2
+    hooks:
+      - id: flake8
+        name: flake8
+        args: [--config=setup.cfg, --max-line-length=120]
+        description: Your Tool For Style Guide Enforcement
+        files: \.py$
+
+  - repo: https://github.com/roy-ht/pre-commit-jupyter
+    rev: v1.2.1
+    hooks:
+      - name: jupyter notebook cleanup
+        id: jupyter-notebook-cleanup
+        description: Cleanup Jupyter notebooks
+        args:
+          # - --remove-kernel-metadata
+          - --pin-patterns
+          - "[pin];[donotremove]"
+
+  - repo: https://github.com/nbQA-dev/nbQA
+    rev: 1.6.0
+    hooks:
+      - name: jupyter black
+        id: nbqa-black
+        description: Apply black to Jupyter notebooks
+        additional_dependencies: [black==22.12.0]
+        args: [--nbqa-mutate]
+
+      - name: jupyter isort
+        id: nbqa-isort
+        description: Apply isort to Jupyter notebooks
+        additional_dependencies: [isort==5.11.4]
+        args: [--nbqa-mutate]
+
+      - name: jupyter ast
+        id: nbqa-check-ast
+        description: Check if code in Jupyter notebooks is valid Python
+        additional_dependencies: [pre-commit-hooks]
+        args: [--nbqa-mutate]
